@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공범 추적기 - Gongbum Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #333;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        /* User Selection Screen */
+        .user-selection {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .user-selection h2 {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .user-btn {
+            padding: 20px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-btn:hover {
+            background: #333;
+            color: white;
+            border-color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1rem;
+            color: #d32f2f;
+            background: #ffebee;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        /* Back Button */
+        .back-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Viewer Content */
+        .viewer-content {
+            display: none;
+        }
+
+        .viewer-content.active {
+            display: block;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #333;
+        }
+
+        .tab-btn.active {
+            color: #333;
+            border-bottom-color: #333;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Filters */
+        .filters {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.95rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            background: white;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        /* Contributions List */
+        .contributions-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #fafafa;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .page-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .page-count {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .contribution-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 20px;
+            transition: background 0.2s;
+        }
+
+        .contribution-item:last-child {
+            border-bottom: none;
+        }
+
+        .contribution-item:hover {
+            background: #fafafa;
+        }
+
+        .contribution-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .document-title {
+            font-weight: 600;
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 1.05rem;
+        }
+
+        .document-title:hover {
+            text-decoration: underline;
+        }
+
+        .revision-tag {
+            font-size: 0.85rem;
+            color: #666;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .size-change {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .size-change.positive {
+            color: #2e7d32;
+            background: #e8f5e9;
+        }
+
+        .size-change.negative {
+            color: #c62828;
+            background: #ffebee;
+        }
+
+        .size-change.neutral {
+            color: #666;
+            background: #f0f0f0;
+        }
+
+        .action-link {
+            font-size: 0.85rem;
+            color: #666;
+            text-decoration: none;
+            padding: 4px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .action-link:hover:not(.disabled) {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .action-link.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .action-link.page-link {
+            color: #0066cc;
+        }
+
+        .timestamp {
+            width: 100%;
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .comment {
+            font-size: 0.9rem;
+            color: #666;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .pagination-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Statistics */
+        .ranking-list {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-item:hover {
+            background: #fafafa;
+        }
+
+        .rank-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            min-width: 50px;
+            color: #666;
+        }
+
+        .rank-number.top1 {
+            color: #ffd700;
+            font-size: 1.4rem;
+        }
+
+        .rank-number.top2 {
+            color: #c0c0c0;
+            font-size: 1.3rem;
+        }
+
+        .rank-number.top3 {
+            color: #cd7f32;
+            font-size: 1.25rem;
+        }
+
+        .rank-doc-name {
+            flex: 1;
+            font-weight: 500;
+            color: #0066cc;
+        }
+
+        .rank-count {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .contribution-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-right {
+                width: 100%;
+            }
+
+            .user-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>공범 추적기</h1>
+            <div class="subtitle">Gongbum Tracker</div>
+        </header>
+
+        <!-- User Selection Screen -->
+        <div id="userSelection" class="user-selection">
+            <h2>사용자를 선택하세요</h2>
+            <div class="loading-message">데이터를 불러오는 중...</div>
+            <div class="user-grid" id="userGrid"></div>
+        </div>
+
+        <!-- Viewer Content -->
+        <div id="viewerContent" class="viewer-content">
+            <button class="back-btn" onclick="showUserSelection()">← 사용자 선택으로 돌아가기</button>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-label">총 페이지 수</div>
+                    <div class="stat-value" id="totalPages">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">총 기여 수</div>
+                    <div class="stat-value" id="totalContributions">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">편집한 문서 수</div>
+                    <div class="stat-value" id="uniqueDocuments">-</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="contributions">기여 내역</button>
+                <button class="tab-btn" data-tab="statistics">통계</button>
+            </div>
+
+            <!-- Contributions Tab -->
+            <div id="contributionsTab" class="tab-content active">
+                <div class="filters">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <input type="text" id="searchInput" placeholder="문서명 검색...">
+                            <select id="searchMode">
+                                <option value="partial">부분 일치</option>
+                                <option value="exact">정확히 일치</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <input type="checkbox" id="filterNormal" checked>
+                            <label for="filterNormal">일반 편집</label>
+                        </div>
+                        <div class="filter-group">
+                            <input type="checkbox" id="filterRevert" checked>
+                            <label for="filterRevert">되돌리기</label>
+                        </div>
+                        <div class="filter-group">
+                            <input type="checkbox" id="filterMove" checked>
+                            <label for="filterMove">이동</label>
+                        </div>
+                        <div class="filter-group">
+                            <input type="checkbox" id="filterDelete" checked>
+                            <label for="filterDelete">삭제</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="contributions-container" id="contributionsContainer"></div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="statisticsTab" class="tab-content">
+                <ul class="ranking-list" id="rankingList"></ul>
+                <div class="pagination" id="statsPagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let filteredData = null;
+        let currentViewPage = 0;
+        let currentStatsPage = 0;
+        let statsSortedData = [];
+        const ITEMS_PER_PAGE = 50;
+        const STATS_PER_PAGE = 50;
+        let availableUsers = [];
+
+        // DOM Elements
+        const userSelection = document.getElementById('userSelection');
+        const userGrid = document.getElementById('userGrid');
+        const viewerContent = document.getElementById('viewerContent');
+        const contributionsContainer = document.getElementById('contributionsContainer');
+        const pagination = document.getElementById('pagination');
+        const searchInput = document.getElementById('searchInput');
+        const searchMode = document.getElementById('searchMode');
+        const filterNormal = document.getElementById('filterNormal');
+        const filterRevert = document.getElementById('filterRevert');
+        const filterMove = document.getElementById('filterMove');
+        const filterDelete = document.getElementById('filterDelete');
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', loadAvailableUsers);
+
+        // Load available users from /data/ directory
+        async function loadAvailableUsers() {
+            try {
+                // GitHub Pages에서 디렉토리 목록을 직접 가져올 수 없으므로
+                // 미리 정의된 사용자 목록을 시도하거나, 특정 파일을 확인합니다.
+                // 여기서는 일반적인 패턴으로 시도해봅니다.
+                
+                // 방법 1: users.json 파일이 있다면 그것을 사용
+                try {
+                    const response = await fetch('./data/users.json');
+                    if (response.ok) {
+                        availableUsers = await response.json();
+                        displayUserButtons();
+                        return;
+                    }
+                } catch (e) {
+                    // users.json이 없으면 다음 방법 시도
+                }
+
+                // 방법 2: 알려진 파일들을 순차적으로 시도
+                // 실제 사용 시에는 data 폴더에 users.json을 만들거나
+                // 아래 배열에 사용자 이름을 직접 추가하세요
+                const possibleUsers = await findUsersFromDataFolder();
+                
+                if (possibleUsers.length > 0) {
+                    availableUsers = possibleUsers;
+                    displayUserButtons();
+                } else {
+                    throw new Error('사용자 데이터를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.querySelector('.loading-message').innerHTML = 
+                    '<div class="error-message">사용자 목록을 불러오는데 실패했습니다.<br>' +
+                    '데이터 폴더에 users.json 파일을 생성하거나,<br>' +
+                    'JavaScript 코드의 possibleUsers 배열에 사용자 이름을 추가하세요.</div>';
+            }
+        }
+
+        // Try to find users by testing common patterns
+        async function findUsersFromDataFolder() {
+            // 여기에 실제 사용자 이름들을 추가하세요
+            // 예: const knownUsers = ['user1', 'user2', 'user3'];
+            const knownUsers = [];
+            
+            // 또는 자동으로 파일을 찾으려면 여러 이름을 시도
+            const testUsers = [];
+            
+            for (const user of knownUsers) {
+                try {
+                    const response = await fetch(`./data/${user}_contributions.json`);
+                    if (response.ok) {
+                        testUsers.push(user);
+                    }
+                } catch (e) {
+                    // 파일이 없으면 무시
+                }
+            }
+            
+            return testUsers;
+        }
+
+        // Display user selection buttons
+        function displayUserButtons() {
+            document.querySelector('.loading-message').style.display = 'none';
+            userGrid.innerHTML = '';
+            
+            if (availableUsers.length === 0) {
+                userGrid.innerHTML = '<div class="error-message">사용자를 찾을 수 없습니다.</div>';
+                return;
+            }
+
+            availableUsers.forEach(username => {
+                const btn = document.createElement('button');
+                btn.className = 'user-btn';
+                btn.textContent = username;
+                btn.onclick = () => loadUserData(username);
+                userGrid.appendChild(btn);
+            });
+        }
+
+        // Load user data
+        async function loadUserData(username) {
+            try {
+                userSelection.style.display = 'none';
+                viewerContent.classList.add('active');
+                
+                const response = await fetch(`./data/${username}_contributions.json`);
+                if (!response.ok) {
+                    throw new Error('데이터를 불러올 수 없습니다.');
+                }
+                
+                currentData = await response.json();
+                processData();
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                alert('사용자 데이터를 불러오는데 실패했습니다: ' + error.message);
+                showUserSelection();
+            }
+        }
+
+        // Show user selection screen
+        function showUserSelection() {
+            viewerContent.classList.remove('active');
+            userSelection.style.display = 'block';
+            currentData = null;
+            filteredData = null;
+        }
+
+        // Process loaded data
+        function processData() {
+            updateStats();
+            generateStatistics();
+            applyFilters();
+            setupEventListeners();
+        }
+
+        function updateStats() {
+            let totalContribs = 0;
+            const uniqueDocs = new Set();
+            currentData.pages.forEach(page => {
+                totalContribs += page.contributions.length;
+                page.contributions.forEach(contrib => {
+                    uniqueDocs.add(contrib.document_link);
+                });
+            });
+            document.getElementById('totalPages').textContent = currentData.pages.length;
+            document.getElementById('totalContributions').textContent = totalContribs;
+            document.getElementById('uniqueDocuments').textContent = uniqueDocs.size;
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(tab + 'Tab').classList.add('active');
+                });
+            });
+
+            searchInput.addEventListener('input', applyFilters);
+            searchMode.addEventListener('change', applyFilters);
+            filterNormal.addEventListener('change', applyFilters);
+            filterRevert.addEventListener('change', applyFilters);
+            filterMove.addEventListener('change', applyFilters);
+            filterDelete.addEventListener('change', applyFilters);
+        }
+
+        function formatComment(comment) {
+            if (!comment) return '';
+            return comment
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>');
+        }
+
+        function applyFilters() {
+            const searchTerm = searchInput.value.trim();
+            const searchExact = searchMode.value === 'exact';
+            const allContributions = [];
+            currentData.pages.forEach(page => {
+                page.contributions.forEach(contrib => {
+                    let shouldInclude = true;
+                    const comment = (contrib.comment || '').toLowerCase();
+                    if (!filterNormal.checked && !comment.includes('revert:') && !comment.includes('move:') && !comment.includes('delete:')) {
+                        shouldInclude = false;
+                    }
+                    if (!filterRevert.checked && comment.includes('revert:')) shouldInclude = false;
+                    if (!filterMove.checked && comment.includes('move:')) shouldInclude = false;
+                    if (!filterDelete.checked && comment.includes('delete:')) shouldInclude = false;
+                    if (searchTerm && shouldInclude) {
+                        if (searchExact) {
+                            if (contrib.document_link !== searchTerm) shouldInclude = false;
+                        } else {
+                            if (!contrib.document_link.includes(searchTerm)) shouldInclude = false;
+                        }
+                    }
+                    if (shouldInclude) {
+                        allContributions.push({
+                            ...contrib,
+                            original_page_number: page.page_number,
+                            original_page_url: page.url
+                        });
+                    }
+                });
+            });
+            filteredData = { contributions: allContributions };
+            currentViewPage = 0;
+            renderPagination();
+            showViewPage(0);
+        }
+
+        function renderPagination() {
+            if (!filteredData || filteredData.contributions.length === 0) {
+                pagination.innerHTML = '<div style="padding: 10px; color: #999;">검색 결과가 없습니다.</div>';
+                return;
+            }
+            const totalItems = filteredData.contributions.length;
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+            const paginationHTML = createPaginationHTML(totalPages, currentViewPage, totalItems);
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function createPaginationHTML(totalPages, currentPage, totalItems) {
+            let html = '';
+            html += `<button class="pagination-btn" onclick="goToViewPage(0)" ${currentPage === 0 ? 'disabled' : ''}>≪</button>`;
+            html += `<button class="pagination-btn" onclick="goToViewPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>&lt;</button>`;
+            const startPage = Math.max(0, currentPage - 4);
+            const endPage = Math.min(totalPages - 1, currentPage + 4);
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToViewPage(${i})">${i + 1}</button>`;
+            }
+            html += `<button class="pagination-btn" onclick="goToViewPage(${currentPage + 1})" ${currentPage === totalPages - 1 ? 'disabled' : ''}>&gt;</button>`;
+            html += `<button class="pagination-btn" onclick="goToViewPage(${totalPages - 1})" ${currentPage === totalPages - 1 ? 'disabled' : ''}>≫</button>`;
+            return html;
+        }
+
+        function goToViewPage(pageNum) {
+            if (!filteredData) return;
+            const totalPages = Math.ceil(filteredData.contributions.length / ITEMS_PER_PAGE);
+            if (pageNum < 0 || pageNum >= totalPages) return;
+            currentViewPage = pageNum;
+            showViewPage(pageNum);
+            renderPagination();
+        }
+
+        function showViewPage(pageNum) {
+            if (!filteredData || filteredData.contributions.length === 0) {
+                contributionsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">표시할 기여 내역이 없습니다.</div>';
+                return;
+            }
+            const startIdx = pageNum * ITEMS_PER_PAGE;
+            const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, filteredData.contributions.length);
+            const pageContributions = filteredData.contributions.slice(startIdx, endIdx);
+            contributionsContainer.innerHTML = `
+                <div class="page-header">
+                    <div class="page-title">기여 내역 (${startIdx + 1}-${endIdx}번째)</div>
+                    <div class="page-count">${pageContributions.length}개 항목</div>
+                </div>
+            `;
+            pageContributions.forEach(contrib => {
+                contributionsContainer.appendChild(createContributionItem(contrib));
+            });
+        }
+
+        function createContributionItem(contrib) {
+            const div = document.createElement('div');
+            div.className = 'contribution-item';
+            const sizeChangeClass = contrib.size_change 
+                ? (contrib.size_change.startsWith('+') ? 'positive' : 
+                   contrib.size_change.startsWith('-') ? 'negative' : 'neutral')
+                : 'neutral';
+            const documentUrl = `https://namu.wiki/w/${encodeURIComponent(contrib.document_link)}`;
+            const historyUrl = `https://namu.wiki/history/${encodeURIComponent(contrib.document_link)}`;
+            const versionUrl = contrib.version_uuid ? `https://namu.wiki/w/${encodeURIComponent(contrib.document_link)}?uuid=${contrib.version_uuid}` : null;
+            const hasDiff = contrib.diff_uuid && contrib.diff_uuid !== 'none';
+            const diffUrl = hasDiff ? `https://namu.wiki/diff/${encodeURIComponent(contrib.document_link)}?uuid=${contrib.diff_uuid}` : '#';
+            const formattedComment = formatComment(contrib.comment);
+
+            div.innerHTML = `
+                <div class="contribution-header">
+                    <div class="header-left">
+                        <a href="${documentUrl}" target="_blank" class="document-title">${contrib.document_link}</a>
+                        ${contrib.version_revision ? `<span class="revision-tag">(${contrib.version_revision})</span>` : ''}
+                        ${contrib.size_change ? `<span class="size-change ${sizeChangeClass}">${contrib.size_change}</span>` : ''}
+                    </div>
+                    <div class="header-right">
+                        ${contrib.original_page_number && contrib.original_page_url ? `<a href="${contrib.original_page_url}" target="_blank" class="action-link page-link">${contrib.original_page_number} 페이지</a>` : ''}
+                        <a href="${historyUrl}" target="_blank" class="action-link">역사</a>
+                        ${versionUrl ? `<a href="${versionUrl}" target="_blank" class="action-link">버전</a>` : ''}
+                        <a href="${diffUrl}" target="_blank" class="action-link ${hasDiff ? '' : 'disabled'}">비교</a>
+                    </div>
+                    <div class="timestamp">${contrib.timestamp || 'Unknown'}</div>
+                </div>
+                ${contrib.comment ? `<div class="comment">${formattedComment}</div>` : ''}
+            `;
+            return div;
+        }
+
+        function generateStatistics() {
+            const docCounts = {};
+            currentData.pages.forEach(page => {
+                page.contributions.forEach(contrib => {
+                    const docName = contrib.document_link;
+                    docCounts[docName] = (docCounts[docName] || 0) + 1;
+                });
+            });
+
+            statsSortedData = Object.entries(docCounts).sort((a, b) => b[1] - a[1]);
+            currentStatsPage = 0;
+            renderStatsPage(0);
+        }
+
+        function renderStatsPage(pageNum) {
+            const rankingList = document.getElementById('rankingList');
+            rankingList.innerHTML = '';
+
+            const startIdx = pageNum * STATS_PER_PAGE;
+            const endIdx = Math.min(startIdx + STATS_PER_PAGE, statsSortedData.length);
+            const pageData = statsSortedData.slice(startIdx, endIdx);
+
+            pageData.forEach(([docName, count], index) => {
+                const li = document.createElement('li');
+                li.className = 'ranking-item';
+                const rank = startIdx + index + 1;
+                let rankClass = '';
+                if (rank === 1) rankClass = 'top1';
+                else if (rank === 2) rankClass = 'top2';
+                else if (rank === 3) rankClass = 'top3';
+
+                li.innerHTML = `
+                    <div class="rank-number ${rankClass}">#${rank}</div>
+                    <div class="rank-doc-name" style="cursor: pointer;" onclick="searchByKeyword('${docName.replace(/'/g, "\\'")}')">${docName}</div>
+                    <div class="rank-count">${count}회</div>
+                `;
+                rankingList.appendChild(li);
+            });
+            renderStatsPagination();
+        }
+
+        function renderStatsPagination() {
+            const paginationContainer = document.getElementById('statsPagination');
+            const totalPages = Math.ceil(statsSortedData.length / STATS_PER_PAGE);
+
+            let html = '';
+            html += `<button class="pagination-btn" onclick="goToStatsPage(0)" ${currentStatsPage === 0 ? 'disabled' : ''}>≪</button>`;
+            html += `<button class="pagination-btn" onclick="goToStatsPage(${currentStatsPage - 1})" ${currentStatsPage === 0 ? 'disabled' : ''}>&lt;</button>`;
+            const start = Math.max(0, currentStatsPage - 4);
+            const end = Math.min(totalPages - 1, currentStatsPage + 4);
+
+            for (let i = start; i <= end; i++) {
+                html += `<button class="pagination-btn ${i === currentStatsPage ? 'active' : ''}" onclick="goToStatsPage(${i})">${i + 1}</button>`;
+            }
+
+            html += `<button class="pagination-btn" onclick="goToStatsPage(${currentStatsPage + 1})" ${currentStatsPage === totalPages - 1 ? 'disabled' : ''}>&gt;</button>`;
+            html += `<button class="pagination-btn" onclick="goToStatsPage(${totalPages - 1})" ${currentStatsPage === totalPages - 1 ? 'disabled' : ''}>≫</button>`;
+            
+            paginationContainer.innerHTML = html;
+        }
+
+        function goToStatsPage(pageNum) {
+            const totalPages = Math.ceil(statsSortedData.length / STATS_PER_PAGE);
+            if (pageNum < 0 || pageNum >= totalPages) return;
+            currentStatsPage = pageNum;
+            renderStatsPage(pageNum);
+        }
+        
+        function searchByKeyword(keyword) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector('[data-tab="contributions"]').classList.add('active');
+            document.getElementById('contributionsTab').classList.add('active');
+            
+            searchInput.value = keyword;
+            searchMode.value = 'exact';
+            applyFilters();
+        }
+    </script>
+</body>
+</html>
