@@ -639,7 +639,7 @@
         // 1. 초기 사용자 목록 로드
         async function loadUserList() {
             try {
-                const response = await fetch('data/user.json');
+                const response = await fetch('data/users.json');
                 const users = await response.json();
                 userList.innerHTML = '';
                 users.forEach(user => {
@@ -651,7 +651,7 @@
                 });
             } catch (error) {
                 console.error('사용자 목록을 불러오는데 실패했습니다:', error);
-                userList.innerHTML = '<p style="color:red; text-align:center; width:100%;">data/user.json 파일을 찾을 수 없습니다.</p>';
+                userList.innerHTML = '<p style="color:red; text-align:center; width:100%;">data/users.json 파일을 찾을 수 없습니다.</p>';
             }
         }
 
