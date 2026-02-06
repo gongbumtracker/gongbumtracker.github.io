@@ -658,7 +658,7 @@
         // 2. 개별 사용자 데이터 로드
         async function loadUserData(username) {
             try {
-                const response = await fetch(`data/${username}.json`);
+                const response = await fetch(`data/${username}_contributions.json`);
                 currentData = await response.json();
                 
                 userSelector.classList.add('hidden');
